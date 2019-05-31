@@ -1,0 +1,150 @@
+/************************************************************************
+ * FILE GUI_FR_analysis.hoc
+ *
+ * GUI for analyzing motoneuron properties
+ ************************************************************************/
+ 
+{xpanel("FR motoneuron control panel")}
+
+{	strdef FRchoice, anaChoice}
+	// Use this menu to select one of the model cell parameter sets
+{	xvarlabel(FRchoice)}
+{	xbutton("pick a file", "chooseCell\(\)")}
+{	xmenu()}
+	
+{	xvarlabel(anaChoice)}
+{	xmenu("Choose analysis")}
+{		xbutton("passive", "assign_ana\(\"passive\"\)")}
+{		xbutton("AP/AHP", "assign_ana\(\"AP/AHP\"\)")}
+{		xbutton("FI", "assign_ana\(\"FI\"\)")}
+{		xbutton("IV", "assign_ana\(\"IV\"\)")}
+//{		xbutton("G ramp", "assign_ana(\"G\")")}
+{	xmenu()}
+{	xbutton("GO", "run_ana\(ana\)")}
+
+{xpanel()}
+
+// PROC assign_model() begin
+// user selected a cell file from the GUI
+strdef model
+proc assign_model() {
+    if (numarg() < 1) {
+	print "assign_model(): missing model cell argument"
+    }
+    model = $s1
+    printf("model = %s\n", model)
+    sprint(FRchoice, "Cell: %s", model)
+}
+// PROC assign_model() end
+
+// PROC ramp_suggestions() begin
+proc ramp_suggestions() {
+    print "Suggested parameters for current clamp ramp:"
+    print "Cell\tFRvar61\tFRv61lt\tFRv61ht\tFRv61B\tFRv61BltFRv61Bht"
+    print "V0\t-5\t-10\t5\t-5\t-10\t5"
+    print "SLOPE\t0.006\t0.006\t0.006\t0.006\t0.006\t0.006"
+    print "TR\t10000\t10000\t10000\t10000\t10000\t10000\n"
+}
+// PROC ramp_suggestions() end
+
+// PROC assign_ana() begin
+// called from menu selection on top level GUI
+strdef ana
+proc assign_ana() {
+    if (numarg() < 1) {
+	print "assign_ana(): missing analyze type argument"
+    }
+    // show user suggested values for the popup window
+    ramp_suggestions()
+    ana = $s1
+    printf("ana = %s\n", ana)
+    sprint(anaChoice, "Analyze: %s", ana)
+    if (strcmp(ana,"FI")==0) {
+	xpanel("FI current clamp parameters")
+	xvalue("Baseline current, I0", "V0", 1, "print \"V0=\",V0")
+	xvalue("Ramp rate, SLOPE", "SLOPE", 1, "print \"SLOPE=\",SLOPE")
+	xvalue("Time of ramp, TR", "TR", 1, "print \"TR=\",TR")
+	xpanel()
+    }
+    if (strcmp(ana,"IV")==0) {
+	xpanel("With or Without Synaptic Activity?")
+	xcheckbox("enable synaptic input", &mult_synss)
+	xpanel()
+    }
+}
+// PROC assign_ana() end
+
+// initial assignments for ramp parameters
+// NOTE that V0 is used for current, in cc mode
+{V0=0}
+{SLOPE=.006}	// low threshold cells may need lower SLOPE, like .004, to keep firing
+{TR=10000}
+
+// PROC run_ana() begin
+// hit the go button to get this procedure to run
+proc run_ana() {
+    if (numarg() < 1) {
+	print "run_ana(): missing analyze type argument"
+    }
+    ana = $s1
+    if (strcmp(ana,"passive") == 0) {
+	{ana_passive(model)}
+    }
+    
+    if (strcmp(ana,"AP/AHP") == 0) {
+	{ana_AP_AHP(model)}
+    }
+    
+    if (strcmp(ana,"FI") == 0) {
+	{ana_FI(model)}
+    }
+
+    if (strcmp(ana,"IV") == 0) {
+        {ana_IV(model)}
+    }
+ 
+    if (strcmp(ana,"G") == 0) {
+        {ana_G(model)}
+    }
+ 
+}
+// PROC run_ana() end
+
+// Assign default values; these are countermanded by user setting via the GUI
+assign_model("<pending>")
+assign_ana("passive")
+
+/***********************************************
+ * PROC chooseCell()
+ *
+ * pick a model using GUI
+ ***********************************************/
+ 
+strdef chosenCell, bn, dir
+objref myCell, strobj
+
+proc chooseCell() {
+    chdir(start_dir)
+    objref myCell, strobj
+    myCell = new File()
+    myCell.chooser("r", "browse to cell", "*.hoc", "click to pick", "Exit", start_dir)
+    while (myCell.chooser()) {
+	myCell.getname(chosenCell)
+    }
+    printf("Chosen cell is %s\n", chosenCell)
+    printf("directory\n%s\n", getcwd())
+    
+    // chosenCell now contains the relative path to the selected file
+    strobj = new StringFunctions()
+    bnloc = strobj.tail(chosenCell, ".*/", bn)
+    // bn now contains the basename of the chosen file
+    strobj.left(chosenCell, bnloc)
+    // chosenCell now contains the relative directory location of the file
+    printf("bn = %s, bnloc = %s\n", bn, chosenCell)
+    
+    chdir(chosenCell)
+    assign_model(bn)
+}
+/*******************************
+ * END chooseCell()
+ *******************************/

@@ -1,0 +1,74 @@
+// Cat FR motoneuron model (reduced morphology)
+//
+// This file constructs the equivalent cylinder of the 3D dendritic morphology of cat FR MN (cell 43/5 in Cullheim et al., 1987)
+// The reduced model reproduce the passive properties of the full morphology faithfully
+// Reduced model passive properties:    Rin = 1.38 MOhm, tau(0)=6.8 ms,  tau(1) = 1.5 ms (graphical peeling method)
+// Experimental data of same MN:        Rin = 1.4 MOhm,  tau(0)=6.82 ms, tau(1) = 1.57 ms
+//
+// Sherif Elbasiouny
+// 07/01/2009
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//load_file("nrngui.hoc")					// Load Neuron
+
+create soma, is, dendrite, axonhillock
+access soma
+
+
+// connect model sections
+connect is(1), axonhillock(0)
+connect axonhillock(1), soma(0)
+connect soma(1), dendrite(0)
+
+
+
+// Define anatomical and biophysical properties of each section
+
+soma {
+	nseg = 1		      // 1 compartment
+	L = 48.8	            // [um] length
+	diam = 48.8	            // [um] diameter
+
+ 	insert pas	            // standard passive current
+	g_pas = 1/225	      // [S/cm^2] conductance for leak current
+	e_pas = -70.0	      // [mV] equilibrium potential for leak
+}
+
+
+is {
+	nseg = 5		      // 5 compartment (changed by RP for better behavior)
+	L = 30			// [um] length
+	diam = 3.3		      // [um] diameter
+
+	insert pas	            // standard passive current
+	g_pas = 1/1000   // [S/cm^2] conductance for leak current; changed from 225 by RP
+	e_pas = -70			// [mV] equilibrium potential for leak
+}
+
+
+axonhillock {
+	nseg = 11		      // 11 compartments
+	L = 15			// [um] length; changed by RP to reflect Conradi
+	diam(0:1) = 3.3:13		// [um] diameter increase
+
+	insert pas	            // standard passive current
+	g_pas = 1/1000    // [S/cm^2] conductance for leak current; changed from 225 by RP
+	e_pas = -70			// [mV] equilibrium potential for leak
+}
+
+
+dendrite {
+	nseg = 19		      // 19 compartments
+	L = 6675		      // [um] total length of the equivalent dendrite
+	diam = 40		      // [um] diameter of the stem
+	diam(0.3:1) = 40:1      // [um] tapering of the distal dendrite
+
+	insert pas         	// standard passive current
+	g_pas = 1/11000	     	// [S/cm^2] conductance for leak current
+	e_pas = -70		      // [mV] equilibrium potential for leak
+}
+
+forall {
+	Ra = 70          		// [ohm.cm]
+	cm = 1          		// [uf/cm2]
+}

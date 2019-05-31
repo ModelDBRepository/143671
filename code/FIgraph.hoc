@@ -1,0 +1,138 @@
+load_file("nrngui.hoc")
+// load_file("../../../code/linfit.hoc")
+load_file("linfit.hoc")
+
+strdef fn, label, zz
+objref mytime, myI, myf, myg, mydata, frq, prm, prmfitI, prmfitF
+
+proc FIgraph() {
+    
+    fn="FRvar110_0.hoc_V0=-10_SLOPE=0.006_TR=10000.csv"
+    prmslp = 2.28	// primary region slope
+    prmitcp = -0.39	// primary region intercept
+    
+    myf = new File()
+    myf.ropen(fn)
+    
+    myg = new Graph()
+    
+    if (myf.gets(label) < 0) {
+	printf("fail to read label from %s\n", fn)
+	return
+    }
+    
+    count = myf.scanvar()
+    print "count = ", count, "\n"
+    mytime = new Vector(count+1)
+    myI = new Vector(count+1)
+    
+    if (count < 1) {
+	printf("count=%d is wrong in %s\n", count, fn)
+	return
+    }
+    
+    maxI = 0		// find the end of the ascending ramp
+    i = 0
+    while (!myf.eof) {
+	myI.x[i] = myf.scanvar()
+	mytime.x[i] = myf.scanvar()
+	if(maxI < myI.x[i]) {
+	    maxI = myI.x[i]
+	    idxMaxI = i
+	    i = i + 1
+	} else {
+	    break
+	}
+    }
+    
+    frq = new Vector(idxMaxI)
+    prm = new Vector(idxMaxI)
+    
+    print "myg.begin\n"
+    myg.begin()
+    for (i=0; i<idxMaxI; i=i+1) {
+	frq.x[i] = 1000/(mytime.x[i+1]-mytime.x[i])
+    }
+    
+    frq.plot(myg, myI)
+    
+    topI = 1.12*myI.x[idxMaxI-1]
+    topf = 1.12*frq.x[idxMaxI-1]
+    myg.size(0, topI, 0, topf)
+    
+    setupprm()
+    print "NOW: click on lower bound of primary region and hit a key"
+}
+
+proc setupprm() {
+    
+/*    
+    print "click on lower bound of primary range, then hit <return>"
+    getstr(zz)
+    x0 = hoc_cross_x_
+    print "x0 = ", x0
+    print "click on upper bound of primary range, then hit <return>"
+    getstr(zz)
+    x1 = hoc_cross_x_
+    print "x1 = ", x1
+    */
+    
+    myg.crosshair_action("lower")
+}
+
+proc getprm() {
+    print "return from lower/upper, use for primary range lower bound"
+    
+    j=0
+    startfit=0
+    for i=0, count {
+	if (myI.x[i] < x0) {
+	    startfit=i+1	// will be the value of i when j=0
+	    continue
+	}
+	
+	if (myI.x[i] > x1) {break}
+	j=j+1
+    }	
+    
+    num2fit = j
+    
+    prmfitI = new Vector(num2fit)	// primary range fit, I values
+    prmfitF = new Vector(num2fit)	// primary range fit, F values
+    
+    for j=0, num2fit-1 {
+	prmfitI.x[j] = myI.x[j+startfit]
+	prmfitF.x[j] = frq.x[j+startfit]
+    }
+    
+    // clear the linear fit parameters
+    prmslp = prmitcp = 0
+    linfit(prmfitI, prmfitF, &prmslp, &prmitcp)
+    print "Primary region gain = ", prmslp, ", intercept = ", prmitcp
+    
+    FIredisplay()
+}
+
+proc lower() {
+    x0 = $1
+    print "x0 = ", x0
+    myg.crosshair_action("upper")
+    print "NOW click on upper bound of primary region and hit a key"
+}
+
+proc upper() {
+    x1 = $1
+    print "x1 = ", x1
+    myg.crosshair_action("")
+    print "Ready to calculate fit for primary range"
+    getprm()
+}
+
+proc FIredisplay() {
+    for (i=0; i<idxMaxI; i=i+1) {
+	frq.x[i] = 1000/(mytime.x[i+1]-mytime.x[i])
+	prm.x[i] = prmslp * myI.x[i] + prmitcp
+    }
+    prm.plot(myg, myI)
+}
+

@@ -1,0 +1,139 @@
+
+//commands for generating response to pure excitatory input
+xopen("Medium_thresh_MN.hoc")
+SLOPE1=0.001	// slope of increase and decrease of excitatory conductance
+SLOPE2=1e-7     //slope  of increase and decrease of inhibitory conductance (can't be zero)
+RSTRT1=0	//background level of excitation
+RSTRT2=0	//background level of inhibition
+TR=20000	//total length of triangular command in milliseconds
+HOLD=1000	//length of steady command at beginning and end of trial
+simple2del()	//constructs excitatory and inhibitory commands
+grampon()	//applies commands
+
+//record spike times and print them out in a file
+apc.record()
+apc.record(spiketimes)
+sprint(filename,"Medium_thresh_MN_g_0_0_0.001_1em7.txt")
+init()
+run()
+spikeout.wopen(filename)
+spiketimes.printf(spikeout,"%8.4f\n")
+spikeout.close()
+
+//responses to three differen temporal patterns of inhibiton
+// when inhibition is uniformly distributed on dendrite and soma
+
+unifinhib()
+
+//commands for generating response to excitation with steady background inhibition
+SLOPE1=0.001	
+SLOPE2=1e-7     
+RSTRT1=0	
+RSTRT2=2	
+TR=20000	
+HOLD=1000	
+simple2del()	
+grampon()	
+apc.record()
+apc.record(spiketimes)
+sprint(filename,"Medium_thresh_MN_g_0_2_0.001_1em7.txt")
+init()
+run()
+spikeout.wopen(filename)
+spiketimes.printf(spikeout,"%8.4f\n")
+spikeout.close()
+
+//commands for generating response to "push-pull" inhibition
+SLOPE1=0.001	
+SLOPE2=-0.001     
+RSTRT1=0	
+RSTRT2=10	
+TR=20000	
+HOLD=1000	
+simple2del()	
+grampon()	
+apc.record()
+apc.record(spiketimes)
+sprint(filename,"Medium_thresh_MN_g_0_1_0.001_m001.txt")
+init()
+run()
+spikeout.wopen(filename)
+spiketimes.printf(spikeout,"%8.4f\n")
+spikeout.close()
+
+//commands for generating response to excitation with proportional inhibition
+SLOPE1=0.001	
+SLOPE2=0.001    
+RSTRT1=0	
+RSTRT2=2	
+TR=20000	
+HOLD=1000	
+simple2del()	
+grampon()	
+apc.record()
+apc.record(spiketimes)
+sprint(filename,"Medium_thresh_MN_g_0_2_0.001_0.001.txt")
+init()
+run()
+spikeout.wopen(filename)
+spiketimes.printf(spikeout,"%8.4f\n")
+spikeout.close()
+		
+//responses to three differen temporal patterns of inhibiton
+// when inhibition is restricted to proximal dendrite and soma
+
+proxinhib()
+
+//commands for generating response to excitation with steady background inhibition
+SLOPE1=0.001	
+SLOPE2=1e-7     
+RSTRT1=0	
+RSTRT2=2	
+TR=20000	
+HOLD=1000	
+simple2del()	
+grampon()	
+apc.record()
+apc.record(spiketimes)
+sprint(filename,"Medium_thresh_MN_gpr_0_2_0.001_1em7.txt")
+init()
+run()
+spikeout.wopen(filename)
+spiketimes.printf(spikeout,"%8.4f\n")
+spikeout.close()
+
+//commands for generating response to "push-pull" inhibition
+SLOPE1=0.001	
+SLOPE2=-0.001     
+RSTRT1=0	
+RSTRT2=10	
+TR=20000	
+HOLD=1000	
+simple2del()	
+grampon()	
+apc.record()
+apc.record(spiketimes)
+sprint(filename,"Medium_thresh_MN_gpr_0_1_0.001_m001.txt")
+init()
+run()
+spikeout.wopen(filename)
+spiketimes.printf(spikeout,"%8.4f\n")
+spikeout.close()
+
+//commands for generating response to excitation with proportional inhibition
+SLOPE1=0.001	
+SLOPE2=0.001    
+RSTRT1=0	
+RSTRT2=2	
+TR=20000	
+HOLD=1000	
+simple2del()	
+grampon()	
+apc.record()
+apc.record(spiketimes)
+sprint(filename,"Medium_thresh_MN_gpr_0_2_0.001_0.001.txt")
+init()
+run()
+spikeout.wopen(filename)
+spiketimes.printf(spikeout,"%8.4f\n")
+spikeout.close()

@@ -1,0 +1,53 @@
+objref velec
+velec= new VClamp(0.5)
+vtempdur1 = 0	// for temporary storage of 
+vtempamp1 = 0	// VClamp[0].dur[1] and amp[1]
+vV0=-70
+vTR=10000
+vSLOPE=0.006
+
+
+
+// invoke the following procedures as needed from the interpreter window
+
+
+
+// to use the ramp to drive the VClamp
+
+proc vrampon() {
+
+	vtempdur1 = VClamp[0].dur[1]
+
+	vtempamp1 = VClamp[0].amp[1]
+
+	// make sure VClamp will follow the command throughout the simulation
+
+VClamp[0].dur[1] = vTR-VClamp[0].dur[0]
+
+	mycmd.play(&VClamp[0].amp[1],dt)
+
+	print "VClamp[0].amp[1] is now driven by vector mycmd"
+
+}
+
+
+
+
+
+// to "disconnect" the ramp from the SEClamp
+
+proc vrampoff() {
+
+	// restore VClamp[0].dur[1] to previously saved value
+
+	VClamp[0].dur[1] = vtempdur1
+
+	VClamp[0].amp[1] = vtempamp1
+
+	mycmd.play_remove()
+
+	print "VClamp[0].amp[1] has been released from mycmd"
+
+}
+
+vsimple()

@@ -1,0 +1,84 @@
+objref velec,mycmd,mycmda,mycmdb,mycmdc,mycmdd
+velec= new VClamp(0.5)
+vtempdur1 = 0	// for temporary storage of 
+vtempamp1 = 0	// VClamp[0].dur[1] and amp[1]
+vV0=-70
+vTR=10000
+vSLOPE=0.006
+vDEL=1000
+
+mycmd = new Vector()	// must create object outside proc
+mycmda = new Vector()	// must create object outside proc
+mycmdb = new Vector()	// must create object outside proc
+mycmdc = new Vector()	// must create object outside proc
+mycmdd = new Vector()	// must create object outside proc
+
+
+// invoke the following procedures as needed from the interpreter window
+
+
+
+// to use the ramp to drive the VClamp
+
+proc mkbirampd() { local vv0, sslope, ttr, vv1, ddel1
+
+	vv0 = $1
+
+	sslope = $2
+
+	ttr = $3
+
+	ddel1=$4
+
+	vv1 = vv0 + sslope*ttr/2
+	mycmda.resize(ddel1/dt)
+	mycmda.fill(vv0)
+	mycmdb.indgen(vv0, vv1, dt*sslope)
+	mycmdc.indgen(vv0,vv1,dt*sslope)
+	mycmdd.resize(ddel1/dt)
+	mycmdd.fill(vv0)
+ mycmdc.reverse()
+ mycmd.resize(0)
+ mycmd.append(mycmda,mycmdb,mycmdc,mycmdd)
+}
+
+
+proc vrampdelon() {
+
+	vtempdur1 = VClamp[0].dur[1]
+
+	vtempamp1 = VClamp[0].amp[1]
+
+
+	// make sure VClamp will follow the command throughout the simulation
+
+
+	VClamp[0].dur[1] =vTR+2*vDEL
+
+	mycmd.play(&VClamp[0].amp[1],dt)
+
+	print "VClamp[0].amp[1] is now driven by vector mycmd"
+
+}
+
+
+
+
+// to "disconnect" the ramp from the SEClamp
+
+proc vrampdeloff() {
+
+	// restore VClamp[0].dur[1] to previously saved value
+
+	VClamp[0].dur[1] = vtempdur1
+
+	VClamp[0].amp[1] = vtempamp1
+
+	mycmd.play_remove()
+
+	print "VClamp[0].amp[1] has been released from mycmd"
+
+}
+
+	
+	mkbirampd(vV0,vSLOPE,vTR,vDEL)

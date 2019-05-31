@@ -1,0 +1,35 @@
+strdef startloc, codeloc, myfile
+DEBUG=0
+strdef start_dir
+start_dir = getcwd()
+
+// code location is 1 directory up, under the "code" directory
+startloc = getcwd()
+{sprint(codeloc, "%s../code", codeloc)}
+
+type = unix_mac_pc()
+{sprint(codeloc, "%s../code", startloc)}
+if (type == 3) { // this is a mswin PC
+    {sprint(myfile, "%s/nrnmech.dll", codeloc)}
+} else { // this is a unix OS
+    //    {sprint(myfile, "%s/i686/.libs/libnrnmech.so", codeloc)}
+    {sprint(myfile, "%s/umac/.libs/libnrnmech.so", codeloc)}
+}    
+// load the compiled dll
+{nrn_load_dll(myfile)}
+
+// Base code
+{sprint(myfile, "%s/FRMotoneuronNaHH.hoc", codeloc)}
+{xopen(myfile)}
+
+access dendrite
+insert Gfluctdv
+access soma
+insert Gfluctdv
+{sprint(myfile,"%s/SetConductances.hoc",codeloc)}
+{load_file(myfile)}
+{sprint(myfile,"%s/gramp.ses",codeloc)}
+{load_file(myfile)}
+{sprint(myfile,"%s/inhibdist",codeloc)}
+{load_file(myfile)}
+

@@ -1,0 +1,90 @@
+/****************************************************************
+ * FILE ana_vc.hoc
+ *
+ * init_FR.hoc loads Randy's FR motoneuron and voltage ramp code
+ * To execute, execute runvc("<modelname>")
+ * This will save the current and voltage data, for the trace, one point per 
+ * millisecond, with the model name incorporated in the file name
+ ****************************************************************/
+
+objref vecV, vecI, ff, str0
+strdef fn, ldfl, myf
+
+/**************************************************
+ * PROC ana_IV() begin
+ *
+ * Generate a voltage ramp and record the current
+ * Argument is the cell file name
+ **************************************************/
+
+proc ana_IV() {
+    print "Entering ana_IV\n"
+    if (numarg() < 1) {
+	print "ana_FI(): call with FR cell for argument"
+	return
+    }
+    
+    fn = $s1
+    
+    if (! xopen(fn)) {
+	printf("Fail to open requested cell file %s\n", fn)
+	return
+    }
+    
+    sprint(myf, "%s/vramp", codeloc)
+    load_file(myf)
+    sprint(myf, "%s/FRmnrampvc.ses", codeloc)
+    load_file(myf)
+    //V0=-70
+    
+    //    SLOPE=.006
+    // TR=10000
+    simple()
+    vrampon()
+    runvc(fn)
+    
+}
+// PROC ana_FI end
+
+// PROC runvc() begin
+// To execute, execute runvc("<modelname>")
+// This will save the current and voltage data, for the trace, one point 
+// per second, with the model name incorporated in the file name
+
+proc runvc() {local i
+    print "entering runvc()\n"
+    ldfl = $s1
+    fo=load_file(ldfl)
+    if (!fo) {
+	printf("bad file %s\n", ldfl)
+	return
+    }
+    
+    objref vecV, vecI, ff, str0
+    vecI=new Vector()
+    vecI.record(&VClamp[0].i)
+    vecV = new Vector()
+    vecV.record(&v(0.5))
+    init()
+    run()
+    ff = new File()
+    str0 = new StringFunctions()
+    // remove the ".hoc" at end of cell filename
+    str0.head(ldfl, "\.hoc*", fn)
+    sprint(fn,"%s-vc_V0=%d_SLOPE=%.3f_TR=%d.csv",fn,V0,SLOPE,TR)
+    fo=ff.wopen(fn)
+    if (!fo) {
+	printf("Fail to open file %s, code=%d\n", fn, fo)
+	return
+    }
+    ff.printf("label:%s\n", ldfl)
+    ff.printf("%d\n", (vecI.size-1)/40)
+    // We only need to save one point per millicsecond, i.e. every 40th point
+    for (i=0; i<vecI.size; i=i+40) {
+	ff.printf("%.4f,%.5f\n", vecV.x[i], vecI.x[i])
+    }
+    ff.close()
+    
+    printf("Created output file %s\nUse Excel to analyze IV curve and PIC parameters\n", fn)
+
+}

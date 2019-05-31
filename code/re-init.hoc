@@ -1,0 +1,32 @@
+/*****************************************************************************
+ * FILE re-init.hoc
+ * 
+ * This is the NEURON restart file for batch execution
+ ****************************************************************************/
+// Randy's base code
+{sprint(myfile, "%s/FRMotoneuron.hoc", codeloc)}
+{xopen(myfile)}
+
+// Batch file to select stuff to run. This is executed in the local directory
+{sprint(myfile, "%s/Batch_FR_ana.hoc", codeloc)}
+{load_file(myfile)}
+
+ // GUI to select batch to run. This is in the code directory
+{sprint(myfile, "%s/GUI_btch_analysis.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to generate small current pulses for passive analysis
+{sprint(myfile, "%s/ana_passive.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to record/analyze AP, AHP
+{sprint(myfile, "%s/RecActive.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to generate current ramps for frequency-current plots
+{sprint(myfile, "%s/ana_FI.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to generate voltage ramps for frequency-current plots
+{sprint(myfile, "%s/ana_vc_synss.hoc", codeloc)}
+{load_file(myfile)}

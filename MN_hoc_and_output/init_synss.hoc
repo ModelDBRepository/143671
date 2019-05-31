@@ -1,0 +1,54 @@
+// This is the NEURON startup file for the motoneuron model set
+{load_file("nrngui.hoc")}
+
+// NOTE: this init file must be executed from a directory containing
+// the hoc files specifying parameters for one or more motoneuron models
+
+
+strdef startloc, codeloc, myfile
+DEBUG=0
+strdef start_dir
+start_dir = getcwd()
+
+// code location is 1 directory up, under the "code" directory
+startloc = getcwd()
+{sprint(codeloc, "%s../code", codeloc)}
+
+type = unix_mac_pc()
+{sprint(codeloc, "%s../code", startloc)}
+if (type == 3) { // this is a mswin PC
+    {sprint(myfile, "%s/nrnmech.dll", codeloc)}
+} else { // this is a unix OS
+    //    {sprint(myfile, "%s/i686/.libs/libnrnmech.so", codeloc)}
+    {sprint(myfile, "%s/umac/.libs/libnrnmech.so", codeloc)}
+}    
+// load the compiled dll
+{nrn_load_dll(myfile)}
+
+// Base code
+{sprint(myfile, "%s/FRMotoneuronNaHH.hoc", codeloc)}
+{xopen(myfile)}
+
+// GUI to select stuff to run. This is in the code directory
+{sprint(myfile, "%s/GUI_FR_analysis.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to generate small current pulses for passive analysis
+{sprint(myfile, "%s/ana_passive.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to record/analyze AP, AHP
+{sprint(myfile, "%s/RecActive.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to generate current ramps for frequency-current plots
+{sprint(myfile, "%s/ana_FI.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to generate voltage ramps for frequency-current plots
+{sprint(myfile, "%s/ana_vc_synss.hoc", codeloc)}
+{load_file(myfile)}
+
+// file to generate conductance ramps
+{sprint(myfile, "%s/ana_G.hoc", codeloc)}
+{load_file(myfile)}

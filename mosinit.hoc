@@ -1,0 +1,15 @@
+//moddir code
+load_file("nrngui.hoc")
+
+objref pwm
+
+xpanel("Powers et al. 2011")
+  xlabel("Choose one of the below simulations:")
+  xbutton("simulating responses to synaptic conductance commands (init_gramp.hoc)", "{ load_file(\"MN_hoc_and_output/init_gramp.hoc\") hide_panel() }")
+  xbutton("current-clamp and voltage-clamp simulations (init_synss.hoc)","{ load_file(\"MN_hoc_and_output/init_synss.hoc\") hide_panel() }")
+xpanel()
+
+pwm=new PWManager()
+proc hide_panel() {
+  pwm.hide(1)
+}

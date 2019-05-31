@@ -1,0 +1,178 @@
+/* This file generates current pulses to measure AP & AHP properties of model
+
+*/
+
+objref vecP, vecB, ff, IclP
+    strdef fn, outf
+
+// PROC ana_AP_AHP()
+proc ana_AP_AHP() {
+    
+    if (numarg() < 1) {
+	print "ana_AP_AHP(): call with FR cell for argument"
+	return
+    }
+    
+    fn = $s1
+    
+    if (! xopen(fn)) {
+	printf("ana_AP_AHP(): Fail to open requested cell file %s\n", fn)
+	return
+    }
+    
+    sprint(myfile, "%s/AP_AHP.ses", codeloc)
+    load_file(myfile)
+    
+    KICKIT=120
+    
+    vecP = new Vector()
+    vecB = new Vector()
+    IclP = new IClamp(0.5)
+    
+    access soma
+    IclP.del = 30
+    IclP.dur = 0.2
+    IclP.amp = KICKIT
+    tstop = 200
+    
+    printf("Running cell model %s\n", fn)
+    load_file(fn)
+    
+    sprint(outf, "AP_AHP_%s.csv", fn)
+    ff = new File()
+    ff.wopen(outf)
+    
+    baseAP()
+    capAP()
+    anaAP()
+    anaAHP()
+    
+    ff.close()
+}
+
+
+proc baseAP() {
+    IclP.amp=0
+    objref vecB
+    vecB=new Vector()
+    vecP.record(&v(0.5))
+    printf("Now running baseAP, tstop=%d\n", tstop)
+    init()
+    run()
+}
+
+proc capAP() {
+    IclP.amp=KICKIT
+    objref vecP
+    vecP = new Vector()
+    vecP.record(&v(0.5))
+    
+    printf("Now running capAP, tstop=%d\n", tstop)
+    init()
+    run()
+}
+
+proc anaAP() {local i
+    APbase=vecP.x[IclP.del*40]
+    APpk=APbase
+    timepk = 0
+    for i=0,vecP.size-1 {
+	if (vecP.x[i] > APpk) {
+	    APpk = vecP.x[i]
+	    timepk = i
+	}
+    }
+    
+    printf("APpk = %.1f mV at %.2f msec\n", APpk-APbase, timepk/40-IclP.del)
+    
+    halfpk0 = APbase
+    halfpk1 = APpk
+    for i=0, timepk {
+	if (vecP.x[i] > (APpk-APbase)/2+APbase) {
+	    halfpk0 = vecP.x[i]
+	    thpk0 = i
+	    break
+	}
+    }
+    for i=timepk, vecP.size-1 {
+	if (vecP.x[i] < (APpk-APbase)/2+APbase) {
+	    halfpk1 = vecP.x[i]
+	    thpk1 = i
+	    break
+	}
+    }
+    printf("halfup: v=%.1f at %.2f msec\n", halfpk0, thpk0/40-IclP.del)
+    printf("halfdn: v=%.1f at %.2f msec\n", halfpk1, thpk1/40-IclP.del)
+    printf("AP width at half-height = %.3f\n", (thpk1-thpk0)/40)
+    
+    ff.printf("AP_height,%.1f\nAP_peak_time,%.2f\n", APpk-APbase, timepk/40-IclP.del)
+    ff.printf("AP_halfwidth,%.3f\n", (thpk1-thpk0)/40)
+    
+}
+proc anaAHP() {local i
+    APbase=vecP.x[IclP.del*40]
+    AHPpk=APbase
+    timeAHPpk = 0
+    for i=0,vecP.size-1 {
+	if (vecP.x[i] < AHPpk) {
+	    AHPpk = vecP.x[i]
+	    timeAHPpk = i
+	}
+    }
+    
+    printf("AHPpk = %.1f mV at %.2f msec\n", AHPpk-APbase, timeAHPpk/40-IclP.del)
+    
+    halfAHPpk0 = APbase
+    halfAHPpk1 = AHPpk
+    for i=0, timeAHPpk {
+	if (vecP.x[i] < (AHPpk-APbase)/2+APbase) {
+	    halfAHPpk0 = vecP.x[i]
+	    tAHPhpk0 = i
+	    break
+	}
+    }
+    for i=timeAHPpk, vecP.size-1 {
+	if (vecP.x[i] > (AHPpk-APbase)/2+APbase) {
+	    halfAHPpk1 = vecP.x[i]
+	    tAHPhpk1 = i
+	    break
+	}
+    }
+    printf("AHPhalfup: v=%.1f at %.2f msec\n", halfAHPpk0, tAHPhpk0/40-IclP.del)
+    printf("AHPhalfdn: v=%.1f at %.2f msec\n", halfAHPpk1, tAHPhpk1/40-IclP.del)
+    printf("AHP width at half-height = %.3f\n", (tAHPhpk1-tAHPhpk0)/40)
+    
+    ff.printf("AHP_height,%.1f\nAHP_peak_time,%.2f\n", AHPpk-APbase, timeAHPpk/40-IclP.del)
+    ff.printf("AHP_halfwidth,%.3f\n", (tAHPhpk1-tAHPhpk0)/40)
+}
+
+proc active_3types() {
+    printf("FRvar61B\n")
+    load_file("FRvar61B")
+    baseAP()
+    capAP()
+    anaAP()
+    anaAHP()
+    printf("\nFRvar61lt\n")
+    load_file("FRvar61lt")
+    baseAP()
+    capAP()
+    anaAP()
+    anaAHP()
+    printf("\nFRvar61ht\n")
+    load_file("FRvar61ht")
+    baseAP()
+    capAP()
+    anaAP()
+    anaAHP()
+}
+
+proc active_type() {
+    printf("%s\n", $s1)
+    load_file($s1)
+    baseAP()
+    capAP()
+    anaAP()
+    anaAHP()
+    printf("\n")
+}

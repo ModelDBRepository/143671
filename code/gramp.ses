@@ -1,0 +1,98 @@
+{load_file("nrngui.hoc")}
+objectvar save_window_, rvp_
+objectvar scene_vector_[6]
+objectvar ocbox_, ocbox_list_, scene_, scene_list_
+{ocbox_list_ = new List()  scene_list_ = new List()}
+{pwman_place(0,0,0)}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,22000,-80,40)
+scene_vector_[2] = save_window_
+{save_window_.view(0, -80, 22000, 120, 692, 504, 473, 297)}
+graphList[0].append(save_window_)
+save_window_.save_name("graphList[0].")
+save_window_.addexpr("v(.5)", 1, 1, 0.8, 0.9, 2)
+save_window_.addexpr("dendrite.v(0.2)", 3, 1, 0.794495, 0.846667, 2)
+save_window_.addexpr("dendrite.v(0.5)", 2, 1, 0.792661, 0.825333, 2)
+}
+{
+xpanel("RunControl", 0)
+v_init = -70
+xvalue("Init","v_init", 1,"stdinit()", 1, 1 )
+xbutton("Init & Run","run()")
+xbutton("Stop","stoprun=1")
+runStopAt = 5
+xvalue("Continue til","runStopAt", 1,"{continuerun(runStopAt) stoprun=1}", 1, 1 )
+runStopIn = 1
+xvalue("Continue for","runStopIn", 1,"{continuerun(t + runStopIn) stoprun=1}", 1, 1 )
+xbutton("Single Step","steprun()")
+t = 2416.6
+xvalue("t","t", 2 )
+tstop = 22000
+xvalue("Tstop","tstop", 1,"tstop_changed()", 0, 1 )
+dt = 0.025
+xvalue("dt","dt", 1,"setdt()", 0, 1 )
+steps_per_ms = 10
+xvalue("Points plotted/ms","steps_per_ms", 1,"setdt()", 0, 1 )
+screen_update_invl = 5
+xvalue("Scrn update invl","screen_update_invl", 1,"", 0, 1 )
+realtime = 16.35
+xvalue("Real Time","realtime", 0,"", 0, 1 )
+xpanel(17,156)
+}
+{
+xpanel("IClamp[0] at soma(0.5)", 0)
+xlabel("IClamp[0] at soma(0.5)")
+elec.del = 0
+xvalue("del","elec.del", 1,"", 0, 1 )
+elec.dur = 10000
+xvalue("dur","elec.dur", 1,"", 0, 1 )
+elec.amp = 0.00015
+xvalue("amp","elec.amp", 1,"", 0, 1 )
+elec.i = 0.00015
+xvalue("i","elec.i", 0,"", 0, 1 )
+xpanel(25,507)
+}
+{
+xpanel("APCount[0] at soma(0.5)", 0)
+xlabel("APCount[0] at soma(0.5)")
+apc.n = 1
+xvalue("n","apc.n", 1,"", 0, 0 )
+apc.thresh = -20
+xvalue("thresh","apc.thresh", 1,"", 0, 0 )
+apc.time = 0.775
+xvalue("time","apc.time", 1,"", 0, 0 )
+apc.firing = 0
+xvalue("firing","apc.firing", 0,"", 0, 0 )
+xpanel(26,675)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,22000,0,1)
+scene_vector_[3] = save_window_
+{save_window_.view(0, 0, 22000, 1, 766, 77, 392, 232)}
+graphList[2].append(save_window_)
+save_window_.save_name("graphList[2].")
+save_window_.addexpr("dendrite.m_L_Ca(0.5)", 1, 1, 0.8, 0.9, 2)
+save_window_.addexpr("dendrite.n_kca2(0.5)", 4, 1, 0.8, 0.9, 2)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,22000,0,0.0002)
+scene_vector_[4] = save_window_
+{save_window_.view(0, 0, 22000, 0.0002, 331, 250, 397, 220)}
+graphList[2].append(save_window_)
+save_window_.save_name("graphList[2].")
+save_window_.addexpr("dendrite.g_e_Gfluctdv( 0.5 )", 1, 1, 0.8, 0.9, 2)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,22000,0,0.0002)
+scene_vector_[5] = save_window_
+{save_window_.view(0, 0, 22000, 0.0002, 319, 24, 400, 195)}
+graphList[2].append(save_window_)
+save_window_.save_name("graphList[2].")
+save_window_.addexpr("dendrite.g_i_Gfluctdv( 0.5 )", 1, 1, 0.8, 0.9, 2)
+}
+objectvar scene_vector_[1]
+{doNotify()}

@@ -1,0 +1,61 @@
+
+proc unifinhib() {
+soma{
+g_i0_Gfluctdv=1e-5 
+std_i_Gfluctdv=6e-6
+}
+dendrite{
+g_i0_Gfluctdv=1e-5 
+std_i_Gfluctdv=6e-6
+}
+}
+
+proc proxinhib() {
+somaarea=soma.L*soma.diam*PI
+dendarea=0
+proxdendarea=0
+access dendrite
+for i=1,25{
+    dendarea=dendarea+area(0.02+0.04*(i-1))
+}
+
+for i=1,5{
+    proxdendarea=proxdendarea+area(0.02+0.04*(i-1))
+}
+totarea=somaarea+dendarea
+proxarea=somaarea+proxdendarea
+
+g_i0_Gfluctdv(0:0.2)=(totarea/proxarea)*1e-5:(totarea/proxarea)*1e-5
+std_i_Gfluctdv(0:0.2)=(totarea/proxarea)*6e-6:(totarea/proxarea)*6e-6
+g_i0_Gfluctdv(0.2:1)=0:0
+std_i_Gfluctdv(0.2:1)=0:0
+
+access soma
+g_i0_Gfluctdv=(totarea/proxarea)*1e-5
+std_i_Gfluctdv=(totarea/proxarea)*6e-6
+}
+
+proc midinhib() {
+somaarea=soma.L*soma.diam*PI
+dendarea=0
+middendarea=0
+access dendrite
+for i=1,25{
+    dendarea=dendarea+area(0.02+0.04*(i-1))
+}
+
+for i=8,13{
+    middendarea=middendarea+area(0.02+0.04*(i-1))
+}
+totarea=somaarea+dendarea
+
+
+g_i0_Gfluctdv(0.32:0.56)=(totarea/middendarea)*1e-5:(totarea/middendarea)*1e-5
+std_i_Gfluctdv(0.32:0.56)=(totarea/middendarea)*6e-6:(totarea/middendarea)*6e-6
+g_i0_Gfluctdv(0.56:1)=0:0
+std_i_Gfluctdv(0.56:1)=0:0
+
+access soma
+g_i0_Gfluctdv=0
+std_i_Gfluctdv=0
+}

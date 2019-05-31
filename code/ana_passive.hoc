@@ -1,0 +1,198 @@
+/*************************************************************************
+ * FILE ana_passive.hoc
+ *
+ * This file generates current pulses to measure passive properties of cell
+ **************************************************************************/
+
+// set up per init_FRvar61B.hoc
+
+objref vecP, vecB, ff, IclP
+strdef fn
+
+
+/**************************************
+ * PROC ana_passive() begin
+ *
+ * called with model file for argument
+ *************************************/
+proc ana_passive() {
+    
+    if (DEBUG) {printf("entered ana_passive, arg=%s\n", $s1)}
+    if (numarg() < 1) {
+	print "ana_passive(): call with FR cell for argument"
+	return
+    }
+    
+    fn = $s1
+    
+    if (! xopen(fn)) {
+	printf("ana_passive(): Fail to open requested cell file %s\n", fn)
+	return
+    }
+    
+/*
+    sprint(myfile, "%s/passive.ses", codeloc)
+    if (! xopen(myfile)) {
+	printf("ana_passive(): Fail to open requested cell file %s\n", myfile)
+	return
+    }
+  */  
+    vecP = new Vector()
+    vecB = new Vector()
+    IclP = new IClamp(0.5)
+    ff = new File()
+    
+    access soma
+    IclP.del = 300
+    IclP.dur = 200
+    IclP.amp = 0
+    tstop = 600
+    
+    // Make a baseline trace and subtract it from the pulse trace, and
+    // save the difference beginning at the start of the current step.
+    // The generated filename will incorporate the calculated Rin.
+    // Use excel to extract time constants
+    getRin(fn, -0.1)	// curent step -0.1 nA
+    
+    printf("Input resistance Rin = %.3f\n", Rin)
+    printf("Voltage response to current pulse is saved in file %s\n", fn)
+    printf("Determine time constants using Excel\n")
+    
+}
+/************************
+ * PROC ana_passive() end
+ ************************/
+ 
+/***************************************************************************
+ * PROC baseline()
+ *
+ * generates a long baseline trace with no current pulse: amp=0
+ * The raw trace is saved as baseline.dat. The compressed trace is saved as bas.dat
+ ***************************************************************************/
+
+proc baseline() {
+    
+    vecB = new Vector()
+    vecB.record(&v(0.5))
+    
+    printf("Now running baseline, tstop=%d\n", tstop)
+    IclP.amp=0
+    init()
+    run()
+}
+/**********************************
+ * end baseline()
+ **********************************/
+ 
+/*************************************************************************
+ * PROC Istep()
+ *
+ * Istep() generates a trace with specified current step amplitude.
+ * Data is recorded in vectore vecP
+ *************************************************************************/
+
+proc Istep () {
+    objref vecP, veccmprs
+    vecP = new Vector()
+    vecP.record(&v(0.5))
+    IclP.amp = $1
+    sprint(fn, "Istep")
+    printf("Now running Istep=%.2f, tstop=%d\n", IclP.amp, tstop)
+    
+    init()
+    run()
+    printf("Collected %d values for current step %.5\n", vecP.size, IclP.amp)
+    printf("Duration %d\n", IclP.dur)
+}
+/********************
+ * end Istep()
+ ********************/
+
+/********************************************************************
+ * PROC capture_pulse()
+ *
+ * TWO arguments: msec long to record and filename for extract to save
+ * This routine begins recording with the IClamp pulse, at IclP.del
+ ********************************************************************/
+
+proc capture_pulse() {local i
+    if ($1 > IclP.dur) {
+	printf("duration %d is greater than IClamp dur %d\n", $1, IclP.dur)
+    }
+    
+    first = 40*IclP.del // dt=25 mu-sec, convert from msec 
+    last = $1 * 40 + first // pass in length in msec
+    
+    fn = $s2
+    if (IclP.amp != 0) {
+	Rin = abs((vecP.x[last]-vecP.x[first])/IclP.amp)
+	sprint(fn,"%s%s%.3f.dat",fn,"_Rin-", Rin)
+    }
+    
+    objref ff
+    ff = new File(fn)
+    fo = ff.wopen()
+    if (!fo) {
+	printf ("capture_pulse(): fail to open file %s\n", fn)
+	return
+    }
+    
+    ff.printf("label:%s\n", fn)
+    ff.printf("%d\n", last-first+1)
+    
+    for i=first, last {
+	ff.printf("%.3f\t%g\n", i/40-IclP.del, vecP.x[i])
+    }
+    ff.close()
+}
+
+objref vecD
+vecD=new Vector()
+strdef mystr, mystr2
+// TWO args: string for start of filename and current for step.
+// collect baseline data, then collect step data, then save file with
+// subset of difference data beginning at start of step.
+proc getRin() {local i
+    objref vecD
+    vecD=new Vector()
+    mystr = $s1
+    myamp=$2
+    baseline()
+    basV = vecB.x[40*IclP.del]	// baseline V, just before step
+    printf("basV=%d\n", basV)
+    
+    // save vecB in vecD, it will be overwritten during Istep()
+    for i=0, vecB.size-1 {
+	vecD.append(vecB.x[i])
+    }
+    
+    Istep($2)
+    sprint(fn, "V=%4.1f%s_+%0.1f", basV, mystr, $2)
+    //    for i=0,vecP.size-1 {
+    //	vecP.append(vecP.x[i]-vecB.x[i])
+    //   }
+    
+    for i=0,vecD.size-1 {
+	vecP.x[i] = basV+ vecP.x[i] - vecD.x[i]
+    }
+
+    capture_pulse(200, fn)
+}
+
+proc Iseries() {local i
+    IClamp[0].dur = tstop
+    I=5
+    for (i=0; i<=50; i=i+5) {
+	I=I-5
+	IClamp[0].amp = I
+	sprint(mystr2, "shft=%d", I)
+	getRin(mystr2, 0.1)
+	getRin(mystr2, -0.1)
+    }
+}
+
+proc clr_gh() {
+    soma.ghbar_gh = 0
+    dendrite.ghbar_gh=0
+}
+

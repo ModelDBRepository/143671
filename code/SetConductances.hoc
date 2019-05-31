@@ -1,0 +1,59 @@
+//Baseline values simplified; std made 60% of baseline mean
+forall {if(ismembrane("Gfluctdv")){g_e0_Gfluctdv=1e-5 std_e_Gfluctdv=6e-6}}
+forall {if(ismembrane("Gfluctdv")){g_i0_Gfluctdv=1e-5 std_i_Gfluctdv=6e-6}}
+forall {if(ismembrane("Gfluctdv")){tau_e_Gfluctdv=0.5 tau_i_Gfluctdv=2}}
+
+
+xopen("twobirampsdel.hoc")
+
+TR=10000
+SLOPE1=0.002
+SLOPE2=0.001
+RSTRT1=0
+RSTRT2=0.5
+HOLD=1000
+
+// invoke the following procedures as needed from the interpreter window
+proc grampon() {
+
+	mycmd1.play(&multex_Gfluctdv,dt)
+	mycmd2.play(&multin_Gfluctdv,dt)
+	print "mixed noisy synaptic input is now driven by vector mycmd"
+}
+
+
+
+
+
+// to "disconnect" the ramp from the fluctuating conductance
+proc grampoff() {
+
+	// restore mult to 0
+
+	mycmd1.play_remove()
+	mycmd2.play_remove()
+	multex_Gfluctdv=0
+	multin_Gfluctdv=0
+
+	print "synaptic conductance has been released from mycmd"
+
+}
+
+simple2del()
+
+
+//code to set up spike counter
+objref apc,spiketimes,spikeout
+apc=new APCount(0.5)
+spiketimes=new Vector()
+spikeout=new File()
+strdef filename
+
+
+//to save spike times, type following in Terminal window
+//		apc.record(spiketimes)
+//		sprint(filename,"FRramp.txt")
+//		spikeout.wopen(filename)
+//		spiketimes.printf(spikeout,"%8.4f\n")
+//		spikeout.close()
+//		

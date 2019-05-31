@@ -1,0 +1,56 @@
+// Create FI curve and save file to analyze
+proc ana_FI() {
+    
+    if (numarg() < 1) {
+	print "ana_FI(): call with FR cell for argument"
+	return
+    }
+    
+    fn = $s1
+    
+    if (! xopen(fn)) {
+	printf("Fail to open requested cell file %s\n", fn)
+	return
+    }
+    
+    sprint(myfile, "%s/FRmnrampcc.ses", codeloc)
+    load_file(myfile)
+    
+    // V0, SLOPE, and TR are set in the calling function
+    
+    simple()
+    rampon()
+    
+    //to save spike times
+    apc.record(spiketimes)
+    
+    run()
+    
+    sprint(filename,"%s_V0=%d_SLOPE=%.3f_TR=%d.csv",fn,V0,SLOPE,TR)
+    print "generating file ",filename
+    spikeout.wopen(filename)
+    for i=0, spiketimes.size-1 {
+	spikeout.printf("%.3f\t%.3f\n", mycmd.x[40*spiketimes.x[i]], spiketimes.x[i])
+    }
+    
+    // spiketimes.printf(spikeout,"%8.4f\n")
+    spikeout.close()
+}
+
+
+proc rerun() {
+    simple()
+    rampon()
+    apc.record(spiketimes)
+    
+    run()
+    
+    sprint(filename,"FRramp.txt")
+    spikeout.wopen(filename)
+    for i=0, spiketimes.size-1 {
+	spikeout.printf("%.3f\t%.3f\n", mycmd.x[40*spiketimes.x[i]], spiketimes.x[i])
+    }
+    
+    // spiketimes.printf(spikeout,"%8.4f\n")
+    spikeout.close()
+}

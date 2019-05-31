@@ -1,0 +1,134 @@
+// FRMotoneuron.hoc
+// Base code to create motoneuron and CC & VC ramp
+// Expected to be executed from some other directory, with THIS file location and its 
+// helpers in the directory "codeloc"
+
+{sprint(myfile, "%s/FRcablepas.hoc", codeloc)}
+{xopen(myfile)}
+
+access soma
+insert na3rp
+insert naps
+insert kdrRL
+gMax_kdrRL=0.1
+insert mAHP
+gkcamax_mAHP=0.01
+gcamax_mAHP=1.5e-5
+eca=80
+insert gh
+
+access axonhillock
+insert na3rp
+insert naps
+insert kdrRL
+gMax_kdrRL=0.15
+
+access is
+insert na3rp
+insert naps
+insert kdrRL
+gMax_kdrRL=0.6
+
+access dendrite
+insert gh
+insert na3rp
+insert naps
+insert kdrRL
+insert kca2
+insert L_Ca
+insert mAHP
+gcamax_mAHP(0:0.1)=1.5e-5:1.5e-5
+gcamax_mAHP(0.1:1)=0:0
+gkcamax_mAHP(0:0.1)=0.004:0.004
+gkcamax_mAHP(0.1:1)=0:0
+gMax_kdrRL(0:1)=0.07:0
+g_kca2(0:0.3)=0:0
+g_kca2(0.3:0.6)=3.8e-4:3.8e-4
+g_kca2(0.6:1)=0:0
+gcabar_L_Ca (0:0.3)=0:0
+gcabar_L_Ca(0.3:0.6)=4e-4:4e-4
+gcabar_L_Ca (0.6:1)=0:0
+depth2_kca2=1000
+taur2_kca2=425
+depth1_kca2=0.1
+taur1_kca2=20
+eca=80
+access soma
+
+theta_m_L_Ca=-40
+tau_m_L_Ca=60
+
+//code for making a current clamp biramp
+
+{sprint(myfile, "%s/makebiramp.hoc", codeloc)}
+{xopen(myfile)}
+
+objref elec
+elec= new IClamp(0.5)
+tempdur1 = 0	// for temporary storage of 
+
+tempamp1 = 0	// IClamp[0].dur and amp
+V0=0
+TR=10000
+SLOPE=0.006
+
+
+// invoke the following procedures as needed from the interpreter window
+
+
+
+// to use the ramp to drive the SEClamp
+
+proc rampon() {
+
+	tempdur1 = IClamp[0].dur
+
+	tempamp1 = IClamp[0].amp
+ 
+
+	// make sure IClamp will follow the command throughout the simulation
+
+IClamp[0].dur = TR
+
+	mycmd.play(&IClamp[0].amp,dt)
+
+	print "IClamp[0].amp is now driven by vector mycmd"
+}
+
+
+
+
+
+// to "disconnect" the ramp from the SEClamp
+
+proc rampoff() {
+
+	// restore IClamp[0].dur to previously saved value
+
+	IClamp[0].dur = tempdur1
+
+IClamp[0].amp = tempamp1
+
+	mycmd.play_remove()
+
+	print "IClamp[0].amp has been released from mycmd"
+
+}
+simple()
+
+
+//code to set up spike counter
+objref apc,spiketimes,spikeout
+apc=new APCount(0.5)
+spiketimes=new Vector()
+spikeout=new File()
+strdef filename
+
+
+//Randy's notes (done above in this file): to save spike times, type following in Terminal window
+//		apc.record(spiketimes)
+//		sprint(filename,"FRramp.txt")
+//		spikeout.wopen(filename)
+//		spiketimes.printf(spikeout,"%8.4f\n")
+//		spikeout.close()
+//		
