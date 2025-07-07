@@ -24,6 +24,4 @@ Changelog
 
 - 20220924: Update MOD files to avoid declaring variables and functions with the same name. See [https://github.com/neuronsimulator/nrn/pull/1992](https://github.com/neuronsimulator/nrn/pull/1992)
 
----
-
-2025-06-20: Converted README to Markdown.
+- 20250620: Converted README to Markdown.
